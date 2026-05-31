@@ -1,121 +1,134 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, Eye, Activity } from 'lucide-react';
-
-// Common services list
-export const SERVICIOS = [
-    'Cardiología',
-    'Neurología',
-    'Cirugía',
-    'Pediatría',
-    'Ginecología',
-    'Oncología',
-    'Traumatología',
-    'Medicina General'
-];
+import { Building2, KeyRound, UserSquare2, ChevronRight, Activity } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { format } from 'date-fns';
+import { supabase } from '../lib/supabase';
 
 const Login = () => {
     const { loginAdmin, loginConsulta } = useAuth();
     const [view, setView] = useState('selection'); // selection, admin, consulta
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [servicios, setServicios] = useState([]);
+    const [loadingServicios, setLoadingServicios] = useState(false);
 
-    const handleAdminLogin = (e) => {
-        e.preventDefault();
-        setError('');
-        const success = loginAdmin(password);
-        if (!success) {
-            setError('Contraseña incorrecta');
+    // Generar contraseña dinámica: Essalud + ddMM
+    const today = new Date();
+    const dynamicPassword = `Essalud${format(today, 'ddMM')}`;
+
+    useEffect(() => {
+        if (view === 'consulta') {
+            cargarServicios();
+        }
+    }, [view]);
+
+    const cargarServicios = async () => {
+        setLoadingServicios(true);
+        try {
+            const { data, error } = await supabase
+                .from('servicios')
+                .select('nombre')
+                .order('nombre');
+            
+            if (error) throw error;
+            setServicios(data.map(s => s.nombre));
+        } catch (error) {
+            console.error('Error al cargar servicios:', error);
+            toast.error('No se pudieron cargar los servicios');
+        } finally {
+            setLoadingServicios(false);
         }
     };
 
-    const handleConsultaLogin = (servicio) => {
-        loginConsulta(servicio);
+    const handleAdminLogin = (e) => {
+        e.preventDefault();
+        if (password === dynamicPassword) {
+            loginAdmin();
+            toast.success('Bienvenido Administrador');
+        } else {
+            toast.error('Clave incorrecta');
+        }
     };
 
-    if (view === 'selection') {
-        return (
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', padding: '1rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-                    <h1 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <Activity />
-                        CITASREF
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Portal de Citas y Referencias Hospitalarias</p>
-                    
+    return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem', animation: 'fadeIn 0.5s ease-out' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div style={{ background: 'rgba(59, 130, 246, 0.2)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                        <Building2 size={40} color="var(--color-primary)" />
+                    </div>
+                    <h1 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Gestión de Referencias</h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Hospital Lazarte - Virgen de la Puerta</p>
+                </div>
+
+                {view === 'selection' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <button onClick={() => setView('admin')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem' }}>
-                            <LogIn size={20} />
-                            Ingreso Administrador (Jefatura)
+                        <button onClick={() => setView('admin')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <KeyRound color="var(--color-primary)" />
+                                <span>Ingreso Administrador</span>
+                            </div>
+                            <ChevronRight size={20} color="var(--text-muted)" />
                         </button>
-                        <button onClick={() => setView('consulta')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem' }}>
-                            <Eye size={20} />
-                            Ingreso de Consulta (Servicios)
+                        
+                        <button onClick={() => setView('consulta')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <UserSquare2 color="var(--color-success)" />
+                                <span>Ingreso de Consulta</span>
+                            </div>
+                            <ChevronRight size={20} color="var(--text-muted)" />
                         </button>
                     </div>
-                </div>
-            </div>
-        );
-    }
+                )}
 
-    if (view === 'admin') {
-        return (
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', padding: '1rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem', maxWidth: '400px', width: '100%' }}>
-                    <button onClick={() => setView('selection')} className="btn btn-secondary" style={{ marginBottom: '1.5rem', padding: '0.5rem', fontSize: '0.9rem' }}>
-                        &larr; Volver
-                    </button>
-                    <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Acceso Administrativo</h2>
-                    
-                    <form onSubmit={handleAdminLogin}>
+                {view === 'admin' && (
+                    <form onSubmit={handleAdminLogin} style={{ animation: 'fadeIn 0.3s' }}>
                         <div className="form-group">
-                            <label className="text-label">Contraseña de Hoy</label>
+                            <label className="text-label">Clave de Jefatura (Día)</label>
                             <input 
                                 type="password" 
                                 className="input-field" 
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                placeholder="Essalud..." 
-                                required 
+                                placeholder="Ingresa la clave dinámica"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                autoFocus
                             />
                         </div>
-                        {error && <p style={{ color: 'var(--color-danger)', fontSize: '0.9rem', marginBottom: '1rem', textAlign: 'center' }}>{error}</p>}
-                        <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                            Ingresar
-                        </button>
+                        <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: '1rem' }}>Entrar</button>
+                        <button type="button" onClick={() => setView('selection')} className="btn btn-secondary" style={{ width: '100%' }}>Volver</button>
                     </form>
-                </div>
-            </div>
-        );
-    }
+                )}
 
-    if (view === 'consulta') {
-        return (
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-app)', padding: '1rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem', maxWidth: '400px', width: '100%' }}>
-                    <button onClick={() => setView('selection')} className="btn btn-secondary" style={{ marginBottom: '1.5rem', padding: '0.5rem', fontSize: '0.9rem' }}>
-                        &larr; Volver
-                    </button>
-                    <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Selecciona tu Servicio</h2>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
-                        {SERVICIOS.map(serv => (
-                            <button 
-                                key={serv} 
-                                onClick={() => handleConsultaLogin(serv)} 
-                                className="btn btn-secondary"
-                                style={{ textAlign: 'left', padding: '1rem', background: 'var(--bg-surface)' }}
-                            >
-                                {serv}
-                            </button>
-                        ))}
+                {view === 'consulta' && (
+                    <div style={{ animation: 'fadeIn 0.3s' }}>
+                        <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-muted)' }}>Selecciona tu Servicio</h3>
+                        
+                        {loadingServicios ? (
+                            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>Cargando servicios...</div>
+                        ) : servicios.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>No hay servicios registrados.</div>
+                        ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.8rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                                {servicios.map(servicio => (
+                                    <button 
+                                        key={servicio} 
+                                        onClick={() => loginConsulta(servicio)}
+                                        className="btn btn-secondary" 
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', textAlign: 'left', padding: '1rem' }}
+                                    >
+                                        <Activity size={18} color="var(--color-primary)" />
+                                        {servicio}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <button onClick={() => setView('selection')} className="btn btn-secondary" style={{ width: '100%', marginTop: '1.5rem' }}>Volver</button>
                     </div>
-                </div>
+                )}
             </div>
-        );
-    }
-
-    return null;
+        </div>
+    );
 };
 
 export default Login;
