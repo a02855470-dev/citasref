@@ -22,16 +22,9 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    const loginAdmin = (password) => {
-        const today = new Date();
-        const correctPassword = `Essalud${format(today, 'ddMM')}`;
-
-        if (password === correctPassword) {
-            setRole('admin');
-            localStorage.setItem('citasref_role', 'admin');
-            return true;
-        }
-        return false;
+    const loginAdmin = () => {
+        setRole('admin');
+        localStorage.setItem('citasref_role', 'admin');
     };
 
     const loginConsulta = (selectedService) => {
