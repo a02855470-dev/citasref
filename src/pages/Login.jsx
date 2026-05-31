@@ -12,9 +12,8 @@ const Login = () => {
     const [servicios, setServicios] = useState([]);
     const [loadingServicios, setLoadingServicios] = useState(false);
 
-    // Generar contraseña dinámica: Essalud + ddMM
-    const today = new Date();
-    const dynamicPassword = `Essalud${format(today, 'ddMM')}`;
+    // Contraseña de administrador
+    const adminPassword = 'Essalud';
 
     useEffect(() => {
         if (view === 'consulta') {
@@ -42,7 +41,7 @@ const Login = () => {
 
     const handleAdminLogin = (e) => {
         e.preventDefault();
-        if (password === dynamicPassword) {
+        if (password === adminPassword) {
             loginAdmin();
             toast.success('Bienvenido Administrador');
         } else {
@@ -84,11 +83,11 @@ const Login = () => {
                 {view === 'admin' && (
                     <form onSubmit={handleAdminLogin} style={{ animation: 'fadeIn 0.3s' }}>
                         <div className="form-group">
-                            <label className="text-label">Clave de Jefatura (Día)</label>
+                            <label className="text-label">Clave de Jefatura</label>
                             <input 
                                 type="password" 
                                 className="input-field" 
-                                placeholder="Ingresa la clave dinámica"
+                                placeholder="Ingresa la clave"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 autoFocus
