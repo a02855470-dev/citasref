@@ -74,7 +74,7 @@ const Login = () => {
                         <button onClick={() => setView('consulta')} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.2rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 <UserSquare2 color="var(--color-success)" />
-                                <span>Ingreso de Consulta</span>
+                                <span>Consultar Citas</span>
                             </div>
                             <ChevronRight size={20} color="var(--text-muted)" />
                         </button>
